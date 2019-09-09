@@ -30,19 +30,16 @@
     #Deep Boltzmann machines (DBMs)
         #which consist of multiple RBMs tied together such that the visibles of one form the hiddens of the next.
 
-
 # The probability distribution encoded by a BM can be represented by an energy function defined over the visible and hidden variables. 
 
-
 # Model design
-
-# This notebook introduces the reference example for training an RBM on the D-Wave machine.
 
 # Defining the problem
 
 # Integer addition is a ubiquitous operation.
 
-    # The addition operation can be represented by a table of data, where each row corresponds to one example: an allowed combination of inputs and outputs. 
+    # The addition operation can be represented by a table of data, where each row corresponds to one example:
+        #an allowed combination of inputs and outputs. 
     # The allowed combinations of variables can be characterized by a distribution over the variables, with narrow peaks around the allowed values.
 
     # If we can learn the distribution, we can use it to solve the addition problem. 
@@ -50,7 +47,8 @@
  
     # Normally, addition is not thought of as a learning problem. Well-understood deterministic algorithms exist and can be optimized at the hardware level. 
     # But learning a distribution over the data allows us to do additional things. 
-    # For example, by clamping the output and one of the inputs, we can sample from the conditional distribution over the other input, yielding the answer to a subtraction problem. 
+    # For example, by clamping the output and one of the inputs, we can sample from the conditional distribution over the other input.
+    `   #yielding the answer to a subtraction problem. 
     # Similarly, we can clamp the output only and obtain a multi-modal distribution peaking at all those inputs that yield the fixed output.
 
 #Setting up our addition model
@@ -61,7 +59,6 @@
 # Placing the units on Chimera
     # From the problem definition, a 3-bit adder requires one (half adder) and two (full adders). 
     # To place them on a Chimera graph, we refer to the following figure:
-
 
 from dwave_bm.rbm import BM
 
@@ -76,17 +73,13 @@ num_hidden = [9, 5]
 r = BM(num_visible=num_visible, num_hidden=num_hidden)
 r
 
-
+#------------------------
 # Exploring the model
 
 # We have created a Boltzmann machine. 
 
-
-
-
 # Here v and h correspond to the bit vectors of visibles and hiddens, respectively. 
 # These are the variables over which we want to learn the distribution.
-
 
 # Upon construction these parameters were populated with random values.
 # If we already know a set of good parameters, we could provide these to the `r` object.
@@ -110,11 +103,11 @@ print("X: {}".format(r.X.shape))
 
 
 # Sampling from the Boltzmann machine
+#------------------------------------
 
 # Now that the BM is created and has some parameters (even if they are random), we can sample from it.
 
 # For now we simply sample from all the visibles, which means sampling the binary random variables from a distribution
-
 
 # where n is the number of visibles.
 # Note that the BM represents a model over all variables, including the hiddens, we can sample the hidden variables also.
@@ -133,11 +126,10 @@ print samples[0:5,:]
 
 
 # The call to [`BM.sample_clamped_model`](documentation/dwave_bm.rbm.bm_class.html#dwave_bm.rbm.bm_class.BM.sample_clamped_model)
-#should have returned a number of samples distributed over the encoded probability distribution.
+# should have returned a number of samples distributed over the encoded probability distribution.
 # Currently we do not expect much structure in the distribution, and we can calculate some statistics to confirm this.
 
 # For example, we may estimate the mean and standard deviation of each variable.
-
 
 import numpy as np
 
@@ -165,8 +157,6 @@ print("standard deviations = {}".format(stddevs))
 
 # In the previous example we designed the structure of our addition model and introduced the ability to sample from it. The samples we obtained from the untrained BM were, predictably, not of much use.
 
-# In this notebook we will train the BM on some data.
-
 # Setting up our semi-RBM
 
 # We consider a 3-bit adder. This means that there are 10 visibles, two inputs $a$ and $b$ that each have three bits and one output $s$ of four bits.
@@ -178,7 +168,6 @@ print("standard deviations = {}".format(stddevs))
 # In this example, we use our domain-specific knowledge of the problem (addition), to design a BM with a better initial guess.
 
 # First, we need to load a configuration file for the D-Wave quantum computer.
-
 # JSON config file with hardware credentials
 # and structural information
 import json
@@ -213,9 +202,7 @@ with open(hw_config_file, 'r') as cf:
     for line in cf.readlines():
         print line,
 
-
 # Loading the hand-crafted model and place it on the hardware
-
 # Here we load the model we designed earlier.
 # The designed model is available in the DIMACS format, a common format for specifying graph problems. Then we place it on the hardware.
 
@@ -231,9 +218,6 @@ model = placer.read_model_dimacs_qubo(model_file)
 
 
 # Now we are ready to create a BM object and initialize it to our hand-crafted model.
-
-
-
 # Create our BM object and pass it the designed model
 r = BM(num_visible=num_visible, num_hidden=num_hidden,
        W_mask=placer.W_mask, X_mask=placer.X_mask,
@@ -267,19 +251,14 @@ from dwave_bm.example_utils import b2d
 
 
 # Sampling
-
 # To set up our BM to use the D-Wave quantum computer as a sampler, we may execute the code below.
-
-
 # Valid samplers are 'cd-10', 'pcd-10', 'hw'
 sampler = 'hw'
 
 
 # Training the Boltzmann machine
-
+#--------------------------
 # Now that we have a family of models and some examples, we can train our model on the data. Before we start training, we add a logger that captures some information about the training process and intermediate results.
-
-
 # Function subscribe_logger writes the state of the BM out to
 # disk (perhaps when )
 from dwave_bm.example_utils import subscribe_logger
@@ -297,9 +276,9 @@ log_frequency = 10
 
 
 # Now we set up some hyperparameters for our training session.
-
 # The maximum number of epochs to train.
     # epochs = 10001
+    
 epochs = 101
 
 # Minibatch size and number of samples are used to estimate the
@@ -314,7 +293,6 @@ eta0 = 0.5
 learning_rate = [eta0*(1 / (1 + i / 200.0)) for i in range(epochs)]
 momentum = 0.5
 
-
 # We now have all the information we need to start the training process.
 # Executing the next cell will take some time.
 # The logger we hooked into the training procedure above will write out the trained model to the disk at the frequency selected
@@ -325,41 +303,41 @@ momentum = 0.5
 # Training BM on the D-Wave quantum computer may take some time.
     #Plan the following runs carefully!
 
-
 # Train the BM. Takes some time.
-# Uncomment the following code to train your BM on the D-Wave quantum computer when it is necessary
 # For debug purpose, try using `cd` or `pcd` as the sampler
 
-# r.train(data_pos,
-#         minibatch_size=minibatch_size,
-#         max_epochs=epochs,
-#         learning_rate=learning_rate,
-#         momentum=momentum,
-#         sampler=sampler,
-#         part_l=placer.part_l,
-#         part_r=placer.part_r,
-#         save_model=save_model,
-#         save_fig=save_fig,
-#         hw_config_file=hw_config_file,
-#         every_n_epochs=log_frequency,
-#         )
+r.train(data_pos,
+        minibatch_size=minibatch_size,
+        max_epochs=epochs,
+        learning_rate=learning_rate,
+        momentum=momentum,
+        sampler=sampler,
+        part_l=placer.part_l,
+        part_r=placer.part_r,
+        save_model=save_model,
+        save_fig=save_fig,
+        hw_config_file=hw_config_file,
+        every_n_epochs=log_frequency,
+        )
 
 #-----------------------------------
 
 # Exploring the QPU-trained semi-RBM
 
 # Previously, we set up and trained an semi-RBM on data describing the 3-bit addition problem.
-# We formed the model and seeded its parameters with a QUBO problem built from constraints describing addition at the bit level. If this procedure was successful, we should now have a model of the distribution over the data.
+# We formed the model and seeded its parameters with a QUBO problem built from constraints describing addition at the bit level.
+# If this procedure was successful, we should now have a model of the distribution over the data.
 
-# We employed the QPU to generate the samples needed to train the semi-RBM. Previous efforts at employing the PCD sampling mechanism failed for this model.
+# We employed the QPU to generate the samples needed to train the semi-RBM.
+# Previous efforts at employing the PCD sampling mechanism failed for this model.
 
 # Next, we will explore the trained RBM and the distribution it represents.
 
-
-
 # Loading the trained model
 
-# The logger we hooked into the training procedure should have written out the model at a frequency we picked. After setting up our session again and creating a new BM object, this time we load the last model saved during training. This should be the model that best fits the training data.
+# The logger we hooked into the training procedure should have written out the model at a frequency we picked.
+#After setting up our session again and creating a new BM object, this time we load the last model saved during training.
+#This should be the model that best fits the training data.
 
 
 # Some boilerplate to set up the environment
@@ -393,7 +371,6 @@ m = load_model(result_epoch)
 # parametrize the trained BM and some metadata
 m.files
 
-
 # First, we can plot how the RMSE of the learned model changed with passing epochs. Hopefully it improved sufficiently over the training epochs.
 
 # import matplotlib for plotting
@@ -403,7 +380,6 @@ domain = m['logged_epochs']
 errors = m['errors']
 plt.plot(domain, errors)
 
-
 # The training error evolution looks better than it did for the PCD-trained model.
 # There is a clear improvement over time (epoch).
 
@@ -412,7 +388,6 @@ plt.plot(domain, errors)
 # This allows us to sample from a particular instance of the addition problem.
 
 # More specifically, we can sample from the distribution
-
 
 # First, we define some convenient ways of loading a BM and sampling from its inputs.
 
@@ -464,8 +439,6 @@ def sample_clamped_inputs(  r,
         
     return samples
 
-
-
 # Now that we have some convenient ways of loading and sampling
 # BMs, we can start out by loading the BM we had at the end
 # of our previous training session.
@@ -482,18 +455,15 @@ b = [0, 1, 1]
 # We can then draw some samples from it.
 samples_trained = sample_clamped_inputs(r_trained, a=a, b=b)
 
-
 # If all has gone well, we should have achieved a reasonably high hit rate above.
 # Unlike in the previous example, this indicates a narrow mode around the correct answer in the conditional distribution p(s|a,b)p(s|a,b).
 # Again, we can gain a more complete picture of the conditional distribution by plotting histogram of the samples obtained.
-
 
 # A function to plot frequencies of events
 from dwave_bm.example_utils import plot_histogram, b2d
 
 # Execute the function on the tranined samples
 plot_histogram(map(b2d, samples_trained), range(15))
-
 
 # There is, again, a narrow mode around the correct answer.
 # Things are looking considerably better than with the PCD-trained model.
@@ -519,14 +489,11 @@ plot_at_epoch(100)
 #plot_all_at_epoch(1000)
 #plot_all_at_epoch(4000)
 
-
 # With limited number of epochs in the previous training, the distribution also started clustered widely around the correct answer.
     # but it did not evolve to convincingly favour the correct answer.
 # In this case the evolution looks more like we expected before, with the distribution gradually tightening around the correct answer.
 
 # As before, we now plot the evolution of other conditional distributions.
-
-
 
 # Calculate and plot the conditional distributions p(s|a,b), p(a|s,b) and p(a,b|s)
 def plot_all_at_epoch(epoch):
@@ -535,10 +502,11 @@ def plot_all_at_epoch(epoch):
 
 plot_all_at_epoch(0)
 plot_all_at_epoch(100)
-#By default, the epochs is set to 100 in section 3.5. If set to 10001, uncomment below to view graphs.
+
+#By default, the epochs is set to 100 in section 3.5.
+# If set to 10001, uncomment below to view graphs.
 #plot_all_at_epoch(1000)
 #plot_all_at_epoch(4000)
-
 
 # As in the single case examined above, the training seems to have been successful in this case.
 # The correct answer was slightly favoured by the untrained (designed) model.
